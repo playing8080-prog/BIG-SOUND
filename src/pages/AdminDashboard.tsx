@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import { Settings, Layout, Image as ImageIcon, MessageSquare, Plus, Trash2, Save, ArrowLeft, Palette, Type, X, Upload, Music } from "lucide-react";
+import { Settings, Layout, Image as ImageIcon, MessageSquare, Plus, Trash2, Save, ArrowLeft, Palette, Type, X, Upload, Music, Lock, Mail } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -20,12 +20,78 @@ const AdminDashboard = () => {
     removePortfolioItem, 
     addPost, 
     updatePost,
-    removePost 
+    removePost,
+    updateAdminPassword
   } = useApp();
-  const [activeTab, setActiveTab] = useState<"theme" | "content" | "services" | "portfolio" | "posts">("theme");
+  const [activeTab, setActiveTab] = useState<"theme" | "content" | "services" | "portfolio" | "posts" | "settings">("theme");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [authError, setAuthError] = useState(false);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === (state.adminPassword || "admin")) {
+      setIsAuthenticated(true);
+      setAuthError(false);
+    } else {
+      setAuthError(true);
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md bg-white/5 border border-white/10 p-8 rounded-[32px] shadow-2xl space-y-8"
+        >
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Lock size={32} className="text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">관리자 로그인</h1>
+            <p className="text-white/40 text-sm">페이지 수정을 위해 비밀번호를 입력해주세요.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <input 
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="비밀번호 입력"
+                className={cn(
+                  "w-full bg-white/5 border rounded-xl px-4 py-4 focus:outline-none transition-all text-white",
+                  authError ? "border-red-500" : "border-white/10 focus:border-purple-500"
+                )}
+                autoFocus
+              />
+              {authError && (
+                <p className="text-red-500 text-xs font-medium">비밀번호가 올바르지 않습니다.</p>
+              )}
+            </div>
+            <button 
+              type="submit"
+              className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all active:scale-[0.98]"
+            >
+              로그인
+            </button>
+            <Link 
+              to="/"
+              className="w-full py-4 flex items-center justify-center gap-2 text-white/40 hover:text-white transition-colors text-sm"
+            >
+              <ArrowLeft size={16} />
+              사이트로 돌아가기
+            </Link>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, portfolioId: string, detailIdx: number) => {
     const files = e.target.files;
@@ -125,6 +191,7 @@ const AdminDashboard = () => {
             { id: "services", label: "서비스 관리", icon: Settings },
             { id: "portfolio", label: "포트폴리오", icon: ImageIcon },
             { id: "posts", label: "게시글 관리", icon: MessageSquare },
+            { id: "settings", label: "시스템 설정", icon: Settings },
           ].map((item) => (
             <button
               key={item.id}
@@ -779,6 +846,60 @@ const AdminDashboard = () => {
                 <Plus size={24} />
                 <span className="font-bold">새 게시글 작성</span>
               </button>
+            </div>
+          </div>
+        )}
+        {activeTab === "settings" && (
+          <div className="space-y-8">
+            <div className="bg-white/5 p-8 rounded-3xl border border-white/10 space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-purple-600/20 flex items-center justify-center text-purple-500">
+                  <Mail size={20} />
+                </div>
+                <h2 className="text-xl font-bold">문의 폼 설정 (Formspree)</h2>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/60">Formspree ID</label>
+                  <input
+                    type="text"
+                    value={state.content.formspreeId || ""}
+                    onChange={(e) => handleContentChange("formspreeId", e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500"
+                    placeholder="예: mzdypgdj"
+                  />
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    Formspree에서 생성한 폼의 고유 ID를 입력해주세요. <br />
+                    이 ID를 통해 문의 내용이 지정된 이메일로 전송됩니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/5 p-8 rounded-3xl border border-white/10 space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-purple-600/20 flex items-center justify-center text-purple-500">
+                  <Lock size={20} />
+                </div>
+                <h2 className="text-xl font-bold">관리자 보안 설정</h2>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/60">관리자 비밀번호 변경</label>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      defaultValue={state.adminPassword}
+                      onBlur={(e) => updateAdminPassword(e.target.value)}
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500"
+                      placeholder="새 비밀번호 입력"
+                    />
+                  </div>
+                  <p className="text-xs text-white/40">
+                    관리자 패널 접속 시 사용할 비밀번호를 설정합니다. (기본값: admin)
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}

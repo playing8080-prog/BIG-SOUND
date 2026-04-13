@@ -110,13 +110,17 @@ const LandingPage = () => {
     
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    data["_subject"] = `[빅사운드] 새로운 문의: ${data.name}`;
     
     try {
-      const response = await fetch("https://formspree.io/f/mzdypgdj", {
+      const formspreeId = state.content.formspreeId || "mzdypgdj";
+      const response = await fetch(`https://formspree.io/f/${formspreeId}`, {
         method: "POST",
-        body: formData,
+        body: JSON.stringify(data),
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
       

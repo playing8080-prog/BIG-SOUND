@@ -15,6 +15,7 @@ interface AppContextType {
   addPost: (post: Omit<Post, "id" | "date">) => void;
   updatePost: (id: string, post: Partial<Omit<Post, "id" | "date">>) => void;
   removePost: (id: string) => void;
+  updateAdminPassword: (password: string) => void;
 }
 
 const initialState: AppState = {
@@ -30,6 +31,7 @@ const initialState: AppState = {
     aboutText: "빅사운드는 다년간의 경험을 바탕으로 한 프리미엄 행사 전문 업체입니다.\n최첨단 장비와 전문 인력을\n통해 고객의 비전을 현실로 만들어 드립니다.",
     aboutImageUrl: "https://picsum.photos/seed/concert-stage-truss/1200/800",
     backgroundMusicUrl: "https://www.youtube.com/watch?v=y0HAY49YtEY",
+    formspreeId: "mzdypgdj",
     services: [
       { id: "1", title: "행사 음향", description: "고출력, 고음질의 최첨단 음향 시스템으로 현장의 감동을 전달합니다.", icon: "Speaker" },
       { id: "2", title: "무대 조명", description: "화려하고 감각적인 조명 연출로 무대의 주인공을 더욱 빛나게 합니다.", icon: "Lightbulb" },
@@ -54,6 +56,7 @@ const initialState: AppState = {
       youtube: "https://youtube.com/bigsound",
     },
   },
+  adminPassword: "admin",
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -173,6 +176,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const updateAdminPassword = (password: string) => {
+    setState((prev) => ({ ...prev, adminPassword: password }));
+  };
+
   if (!isInitialized) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -196,6 +203,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addPost,
         updatePost,
         removePost,
+        updateAdminPassword,
       }}
     >
       {children}

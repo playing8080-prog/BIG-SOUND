@@ -41,6 +41,7 @@ export interface AppState {
     aboutText: string;
     aboutImageUrl: string;
     backgroundMusicUrl: string;
+    formspreeId?: string;
     services: Service[];
     portfolio: PortfolioItem[];
     posts: Post[];
@@ -52,4 +53,5 @@ export interface AppState {
       youtube: string;
     };
   };
+  adminPassword?: string;
 }
