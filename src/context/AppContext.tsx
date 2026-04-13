@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AppState, Service, PortfolioItem, Post } from "../types";
-import { get, set } from "idb-keyval";
+import { db, doc, setDoc, onSnapshot } from "../lib/firebase";
 
 interface AppContextType {
   state: AppState;
@@ -66,60 +66,76 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const saved = await get("bigsound_state");
-        if (saved) {
-          setState(saved);
-        }
-      } catch (error) {
-        console.error("Failed to load state from IndexedDB:", error);
-      } finally {
-        setIsInitialized(true);
+    const stateDoc = doc(db, "settings", "state");
+    
+    // Listen for real-time updates from Firestore
+    const unsubscribe = onSnapshot(stateDoc, (snapshot) => {
+      if (snapshot.exists()) {
+        setState(snapshot.data() as AppState);
+      } else {
+        // If no data exists in Firestore, initialize it with initialState
+        setDoc(stateDoc, initialState).catch(err => console.error("Failed to initialize Firestore:", err));
       }
-    };
-    init();
+      setIsInitialized(true);
+    }, (error) => {
+      console.error("Firestore error:", error);
+      setIsInitialized(true); // Still initialize to show something
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (isInitialized) {
-      set("bigsound_state", state).catch((error) => {
-        console.error("Failed to save state to IndexedDB:", error);
-      });
+  // Function to sync local changes to Firestore
+  const syncToFirebase = async (newState: AppState) => {
+    try {
+      const stateDoc = doc(db, "settings", "state");
+      await setDoc(stateDoc, newState);
+    } catch (error) {
+      console.error("Failed to sync to Firebase:", error);
     }
-  }, [state, isInitialized]);
+  };
 
   const updateTheme = (theme: Partial<AppState["theme"]>) => {
-    setState((prev) => ({ ...prev, theme: { ...prev.theme, ...theme } }));
+    const newState = { ...state, theme: { ...state.theme, ...theme } };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const updateContent = (content: Partial<AppState["content"]>) => {
-    setState((prev) => ({ ...prev, content: { ...prev.content, ...content } }));
+    const newState = { ...state, content: { ...state.content, ...content } };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const addService = (service: Omit<Service, "id">) => {
     const newService = { ...service, id: Date.now().toString() };
-    setState((prev) => ({
-      ...prev,
-      content: { ...prev.content, services: [...prev.content.services, newService] },
-    }));
+    const newState = {
+      ...state,
+      content: { ...state.content, services: [...state.content.services, newService] },
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const updateService = (id: string, service: Partial<Omit<Service, "id">>) => {
-    setState((prev) => ({
-      ...prev,
+    const newState = {
+      ...state,
       content: {
-        ...prev.content,
-        services: prev.content.services.map((s) => (s.id === id ? { ...s, ...service } : s)),
+        ...state.content,
+        services: state.content.services.map((s) => (s.id === id ? { ...s, ...service } : s)),
       },
-    }));
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const removeService = (id: string) => {
-    setState((prev) => ({
-      ...prev,
-      content: { ...prev.content, services: prev.content.services.filter((s) => s.id !== id) },
-    }));
+    const newState = {
+      ...state,
+      content: { ...state.content, services: state.content.services.filter((s) => s.id !== id) },
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const addPortfolioItem = (item: Omit<PortfolioItem, "id">) => {
@@ -128,56 +144,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: Date.now().toString(),
       details: item.details || [] 
     };
-    setState((prev) => ({
-      ...prev,
-      content: { ...prev.content, portfolio: [...prev.content.portfolio, newItem] },
-    }));
+    const newState = {
+      ...state,
+      content: { ...state.content, portfolio: [...state.content.portfolio, newItem] },
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const updatePortfolioItem = (id: string, item: Partial<Omit<PortfolioItem, "id">>) => {
-    setState((prev) => ({
-      ...prev,
+    const newState = {
+      ...state,
       content: {
-        ...prev.content,
-        portfolio: prev.content.portfolio.map((i) => (i.id === id ? { ...i, ...item } : i)),
+        ...state.content,
+        portfolio: state.content.portfolio.map((i) => (i.id === id ? { ...i, ...item } : i)),
       },
-    }));
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const removePortfolioItem = (id: string) => {
-    setState((prev) => ({
-      ...prev,
-      content: { ...prev.content, portfolio: prev.content.portfolio.filter((i) => i.id !== id) },
-    }));
+    const newState = {
+      ...state,
+      content: { ...state.content, portfolio: state.content.portfolio.filter((i) => i.id !== id) },
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const addPost = (post: Omit<Post, "id" | "date">) => {
     const newPost = { ...post, id: Date.now().toString(), date: new Date().toISOString().split("T")[0] };
-    setState((prev) => ({
-      ...prev,
-      content: { ...prev.content, posts: [newPost, ...prev.content.posts] },
-    }));
+    const newState = {
+      ...state,
+      content: { ...state.content, posts: [newPost, ...state.content.posts] },
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const updatePost = (id: string, post: Partial<Omit<Post, "id" | "date">>) => {
-    setState((prev) => ({
-      ...prev,
+    const newState = {
+      ...state,
       content: {
-        ...prev.content,
-        posts: prev.content.posts.map((p) => (p.id === id ? { ...p, ...post } : p)),
+        ...state.content,
+        posts: state.content.posts.map((p) => (p.id === id ? { ...p, ...post } : p)),
       },
-    }));
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const removePost = (id: string) => {
-    setState((prev) => ({
-      ...prev,
-      content: { ...prev.content, posts: prev.content.posts.filter((p) => p.id !== id) },
-    }));
+    const newState = {
+      ...state,
+      content: { ...state.content, posts: state.content.posts.filter((p) => p.id !== id) },
+    };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   const updateAdminPassword = (password: string) => {
-    setState((prev) => ({ ...prev, adminPassword: password }));
+    const newState = { ...state, adminPassword: password };
+    setState(newState);
+    syncToFirebase(newState);
   };
 
   if (!isInitialized) {

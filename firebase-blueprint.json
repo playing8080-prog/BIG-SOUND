@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "appState": {
+      "title": "AppState",
+      "description": "The global state of the application including theme and content.",
+      "type": "object",
+      "properties": {
+        "theme": {
+          "type": "object",
+          "properties": {
+            "primaryColor": { "type": "string" },
+            "backgroundColor": { "type": "string" },
+            "fontFamily": { "type": "string" }
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "heroTitle": { "type": "string" },
+            "heroSubtitle": { "type": "string" },
+            "logoUrl": { "type": "string" },
+            "aboutText": { "type": "string" },
+            "aboutImageUrl": { "type": "string" },
+            "backgroundMusicUrl": { "type": "string" },
+            "formspreeId": { "type": "string" },
+            "services": { "type": "array" },
+            "portfolio": { "type": "array" },
+            "posts": { "type": "array" },
+            "contact": { "type": "object" }
+          }
+        },
+        "adminPassword": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/settings/state": {
+      "schema": "appState",
+      "description": "The single document storing the entire application state."
+    }
+  }
+}

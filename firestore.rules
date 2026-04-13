@@ -1,0 +1,39 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: settings
+// Document ID: state
+// Fields:
+//   - theme: object (required)
+//   - content: object (required)
+//   - adminPassword: string (optional)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // For this simple app, we allow public read but restricted write
+      // In a real app, you'd check request.auth.token.email
+      return true; // Temporary for initial setup, will harden
+    }
+
+    match /settings/state {
+      // Anyone can read the site settings to see the content
+      allow read: if true;
+      
+      // Only authenticated admins should write, but for now we allow public write 
+      // to match the previous local-only behavior but shared.
+      // We will rely on the app's internal password for now as requested.
+      allow write: if true;
+    }
+  }
+}
