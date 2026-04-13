@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { useApp } from "../context/AppContext";
 import { motion, AnimatePresence } from "motion/react";
+import { Link } from "react-router-dom";
 import { Speaker, Lightbulb, Calendar, Video, Instagram, Youtube, Mail, Phone, MapPin, ChevronRight, Menu, X, Volume2, VolumeX } from "lucide-react";
 import { cn } from "../lib/utils";
 import { PortfolioItem } from "../types";
@@ -280,12 +281,12 @@ const LandingPage = () => {
                 {item.label}
               </button>
             ))}
-            <a
-              href="/admin"
+            <Link
+              to="/admin"
               className="px-4 py-2 rounded-full text-sm font-semibold border border-[#1a1a1a]/10 hover:bg-[#1a1a1a]/5 transition-all text-[#1a1a1a]"
             >
               관리자
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -319,7 +320,7 @@ const LandingPage = () => {
                 {item.label}
               </button>
             ))}
-            <a href="/admin" className="text-lg font-medium text-[#1a1a1a]/60">관리자</a>
+            <Link to="/admin" className="text-lg font-medium text-[#1a1a1a]/60">관리자</Link>
           </motion.div>
         )}
       </nav>

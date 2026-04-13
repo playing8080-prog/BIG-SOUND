@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { motion } from "motion/react";
+import { Link } from "react-router-dom";
 import { Settings, Layout, Image as ImageIcon, MessageSquare, Plus, Trash2, Save, ArrowLeft, Palette, Type, X, Upload, Music } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -143,13 +144,13 @@ const AdminDashboard = () => {
         </nav>
 
         <div className="mt-auto">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition-all"
           >
             <ArrowLeft size={18} />
             사이트로 돌아가기
-          </a>
+          </Link>
         </div>
       </aside>
 
