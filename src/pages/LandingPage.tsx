@@ -280,6 +280,12 @@ const LandingPage = () => {
                 {item.label}
               </button>
             ))}
+            <a
+              href="/admin"
+              className="px-4 py-2 rounded-full text-sm font-semibold border border-[#1a1a1a]/10 hover:bg-[#1a1a1a]/5 transition-all text-[#1a1a1a]"
+            >
+              관리자
+            </a>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -313,6 +319,7 @@ const LandingPage = () => {
                 {item.label}
               </button>
             ))}
+            <a href="/admin" className="text-lg font-medium text-[#1a1a1a]/60">관리자</a>
           </motion.div>
         )}
       </nav>
